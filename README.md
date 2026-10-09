@@ -38,3 +38,11 @@ IDLE ──(SW0 up)──► ARMED ──(SW1 flipped)──► TRIGGERED ──
                                                                              ▼
                                                                             IDLE
 ```
+
+ #
+ 
+### Design Methodology
+
+*   **Hardware Description:** The peripheral controllers and the FSM logic are authored in **Verilog HDL**, synthesized using **Intel Quartus Prime lite**.
+*   **Clock Management:** A clock divider module is employed to step down the 50MHz onboard oscillator to a human-readable frequency for the alarm delay and LED blinking patterns.
+*   **Synchronization:** All asynchronous inputs from buttons and switches are passed through a **debouncing circuit** to prevent false triggers.
