@@ -46,3 +46,60 @@ IDLE ──(SW0 up)──► ARMED ──(SW1 flipped)──► TRIGGERED ──
 *   **Hardware Description:** The peripheral controllers and the FSM logic are authored in **Verilog HDL**, synthesized using **Intel Quartus Prime lite**.
 *   **Clock Management:** A clock divider module is employed to step down the 50MHz onboard oscillator to a human-readable frequency for the alarm delay and LED blinking patterns.
 *   **Synchronization:** All asynchronous inputs from buttons and switches are passed through a **debouncing circuit** to prevent false triggers.
+
+#
+
+### State Transition
+
+- **IDLE** : Nothing is happening. LCD shows a blue "LOCK THE SYSTEM" screen with an unlocked padlock.
+ 
+- **ARMED** : System is watching for the sensor. LCD shows green "LOCKED". Flip SW[0] back down to return to idle.
+ 
+- **TRIGGERED** : Motion detected. LCD goes red with "ALARM / TRIGGERED". The 5-second countdown starts on HEX0/HEX1. After 5 seconds the system moves to PIN entry automatically.
+ 
+- **PIN_ENTRY** : User has 60 seconds and 3 attempts to enter the PIN. The 60-second countdown runs on the 7-seg displays. LCD shows "ENTER THE PIN" on the first attempt. After each wrong attempt the screen changes to show how many attempts are left.
+ 
+- **SUCCESS** : Correct PIN entered. LCD shows green "PIN ENTERED / SUCCESSFULLY" for 2 seconds, then the system goes back to ARMED (or IDLE if SW[0] was flipped down).
+ 
+- **LOCKOUT** : Too many wrong attempts or timed out. LCD shows red "WRONG PIN / SYSTEM LOCKED". Locked for 30 seconds then resets to IDLE.
+
+#
+
+## Hardware pin setup
+ 
+| Input | Board Pin | What it does |
+|---|---|---|
+| SW[0] | AB12 | Arm switch — flip up to arm the system |
+| SW[1] | AC12 | Sensor trigger — flip up to simulate motion detection |
+| KEY[0] | AA14 | System reset (hold down) |
+| KEY[1] | AA15 | PIN button 1 |
+| KEY[2] | W15 | PIN button 2 |
+| KEY[3] | Y16 | PIN button 3 |
+ 
+
+#
+
+## PIN entry
+ 
+The correct sequence is: **KEY2 → KEY3 → KEY1**
+ 
+Each attempt requires exactly 3 button presses. The system only decides if the attempt is right or wrong after the third press — pressing a wrong button on the first press doesn't immediately count as a failed attempt, you still need to complete all 3 presses. This means you get the full 9 button presses across 3 attempts before the system locks out.
+ 
+The buttons are debounced (20ms counter at 50MHz) so each physical press produces exactly one pulse regardless of how long you hold the button.
+
+#
+
+ ## LCD screens
+ 
+| State | Screen | Colour |
+|---|---|---|
+| IDLE | "LOCK THE  SYSTEM" + unlocked padlock | Blue |
+| ARMED | "LOCKED" + padlock icon | Green |
+| TRIGGERED | "ALARM  TRIGGERED" | Red |
+| PIN_ENTRY  | "ENTER THE  PIN" | Blue |
+| PIN_ENTRY  | "WRONG PIN  ATTEMPTS: 2" | Red |
+| PIN_ENTRY  | "WRONG PIN  ATTEMPTS: 1" | Red |
+| SUCCESS | "PIN ENTERED  SUCCESSFULLY" | Green |
+| LOCKOUT | "WRONG PIN  SYSTEM LOCKED" | Red |
+ 
+---
